@@ -1,0 +1,180 @@
+{% load static %}
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/materialize.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/custom.css' %}">
+
+    <!-- Menu superior -->
+    <header>
+        <nav class="teal lighten-2">
+          <div class="container">
+          <div class="nav-wrapper">
+            <a href="https://localhost:8000/index" class="brand-logo">Opendemia</a>
+            <a href="#" data-target="mobile-demo" class="sidenav-trigger"><i class="material-icons">menu</i></a>
+            <ul class="right hide-on-med-and-down">
+              <li><a href="#">Sobre nós</a></li>
+              <li><a href="#">Contatos</a></li>
+            </ul>
+          </div>
+          </div>
+      </nav>
+
+      <ul class="sidenav" id="mobile-demo">
+        <li><a href="#">Sobre nós</a></li>
+        <li><a href="#">Contatos</a></li>
+      </ul>
+    </header>
+       
+    <style type="text/css">
+        
+    </style>
+      <!-- Mapa do geochart -->
+      <script type='text/javascript' src='https://www.gstatic.com/charts/loader.js'></script>
+      <script type='text/javascript'>
+        google.charts.load('current', {
+          'packages': ['geochart'],
+          // Note: you will need to get a mapsApiKey for your project.
+          // See: https://developers.google.com/chart/interactive/docs/basic_load_libs#load-settings
+          'mapsApiKey': 'AIzaSyCFk0gvT48z_YDEszC2b7t0nlmC5vn2Xyg'
+        });
+
+        // Função que recebe os dados do banco e preenche o mapa
+        google.charts.setOnLoadCallback(drawRegionsMap);
+        function drawRegionsMap() {
+          console.log( {{ auxpython | safe}});
+          var dados = {{auxpython | safe}};
+          var aux = [['Region', 'Casos'], ...dados];
+            console.log(aux)
+            var data = google.visualization.arrayToDataTable(aux);
+
+            var options = {
+              //sizeAxis: { minValue: 0, maxValue: 500 },
+              //region: '155', // Western Europe
+              //displayMode: 'markers',
+              region: 'BR',
+              resolution: 'provinces',
+              backgroundColor: '#DCDCDC',
+              colorAxis: { colors: ['#87CEEB','#008080', '#FF4500'] }
+            };
+
+            var chart = new google.visualization.GeoChart(document.getElementById('regions_div'));
+            chart.draw(data, options);
+
+        };
+      </script>
+  </head>
+
+  <!-- Exibição do mapa, do select e do botão do facebook -->
+  <body>
+    <div class="container">
+      <div class="row">
+          <div class="col s6 input-field">
+            <form action="/index/" method="POST">
+              {% csrf_token %}
+              <select class="browser-default" name="doencas" id="doencas" onChange="form.submit();">
+                <option value="" disabled selected>Selecione uma doença para ver os casos por Estado</option>
+                {% for d in doencass %}
+                  <option value="{{ d.id }}">{{ d.nome }}</option>
+                {% endfor %}
+              </select>
+            </form>
+          </div>
+      </div>
+      <div class="row">
+        <div class="col s10">
+          <div id="regions_div" style="width: 800px; height: 500px;"></div>
+        </div>
+        <div class="col s2">
+          <fb:login-button id="botaoFacebook" scope="public_profile,email,user_likes, user_friends"
+          onlogin="checkLoginState();"></fb:login-button>
+        </div>
+      </div>
+    </div>
+  </body>
+
+    <meta charset="UTF-8">
+    <title>OPENDEMIA</title>
+    <link rel="stylesheet" href="{% static 'css/materialize.min.css' %}">
+     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script> <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script> <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+    <script>
+          // Função que inicializa a API do Facebook
+          window.fbAsyncInit = function() {
+            FB.init({
+              appId      : '697382141093329',
+              cookie     : true,
+              xfbml      : true,
+              version    : 'v7.0'
+            });
+            FB.AppEvents.logPageView();
+          };
+
+           (function(d, s, id){
+             var js, fjs = d.getElementsByTagName(s)[0];
+             if (d.getElementById(id)) {return;}
+             js = d.createElement(s); js.id = id;
+             js.src = "https://connect.facebook.net/en_US/sdk.js";
+             fjs.parentNode.insertBefore(js, fjs);
+           }(document, 'script', 'facebook-jssdk'));
+
+           // Função que confere se o usuário está autorizado
+        function statusChangeCallback(response) {
+             if (response.status === 'connected') {
+                console.log("Usuário Autorizado.");
+                FB.api('me?fields=name,id', function (responsex) {
+                  if (responsex) {
+                    window.location.href="https://localhost:8000/update_session/" + responsex.id;
+                  }
+                });
+             } else {
+                console.log("Não Autorizado");
+             }
+        }
+
+          //Recebe a ação do botão do facebook
+        function checkLoginState() {
+            FB.getLoginStatus(function(response) {
+              statusChangeCallback(response);
+            });
+        }
+
+        // Pegando a doença do select box
+        function solicitar() {
+				var select = document.getElementById('doencas');
+				var value = select.options[select.selectedIndex].value;
+        console.log(value);
+
+          // body = {
+          //           value, csrfmiddlewaretoken: '{{ csrf_token }}'
+          //       }
+          //         console.log(body)
+          //         fetch('/index2/', {
+          //           method: 'POST',
+          //           body: JSON.stringify(body),
+          //           headers: {
+          //             'Accept': 'application/json, text/plain, */*',
+          //             'Content-Type': 'application/json',
+          //             "X-CSRFToken": '{{ csrf_token }}'
+          //           },
+          //         })
+          
+          drawRegionsMap();
+        }
+
+    </script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <!--JavaScript at end of body for optimized loading-->
+    <script type="text/javascript" src="{% static 'js/materialize.min.js' %}"></script>
+    <script>
+      $(document).ready(function(){
+      $('.sidenav').sidenav();
+    });
+    </script>
+</html>

@@ -1,0 +1,26 @@
+body{
+	margin: 0 auto;
+	background-color: #e0f2f1;
+}
+@media only screen and (min-width: 993px) {
+  .container {
+    width: 90%;
+  }
+}
+
+#paginas {
+  color: black;
+  font-family: Georgia, 'Times New Roman', Times, serif;
+  font-size: 18px;
+  padding-top: 10px;
+}
+
+#regions_div{
+  padding-top: 50px;
+}
+
+#botaoFacebook{
+  padding-top: 50px;
+}
+
+span{font-weight: bold;}

@@ -1,0 +1,518 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8">
+  <title>OPENDEMIA</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/materialize.min.css' %}">
+  <link rel="stylesheet" href="{% static 'css/custom.css' %}">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+  <!-- Menu superior -->
+  <header>
+    <nav class="teal lighten-2">
+      <div class="container">
+        <div class="nav-wrapper">
+          <a href="https://localhost:8000/index" class="brand-logo">Opendemia</a>
+          <a href="#" data-target="mobile-demo" class="sidenav-trigger"><i class="material-icons">menu</i></a>
+          <ul class="right hide-on-med-and-down">
+            <li><a href="#">Sobre nós</a></li>
+            <li><a href="#">Contatos</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <ul class="sidenav" id="mobile-demo">
+      <li><a href="#">Sobre nós</a></li>
+      <li><a href="#">Contatos</a></li>
+    </ul>
+  </header>
+
+  <!-- Google geocoding -->
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+  <style type="text/css">
+    html {
+      height: 100%
+    }
+
+    body {
+      height: 100%;
+      margin: 0 auto;
+      padding: 0;
+    }
+
+    #map_canvas {
+      margin-left: 160px;
+      height: 100%;
+    }
+  </style>
+
+</head>
+
+<body onload="initialize()">
+  <!-- Select para o usuário informar a doença para calcular o indice de contaminação -->
+  <div class="container">
+    <div class="row">
+      <div class col="s6" id="paginas"></div>
+    </div>
+    <div class="row">
+      <div class="col s6 input-field">
+        <select class="browser-default" id="doencas" onChange="calcular()">
+          <option value="" disabled selected>Selecione uma doença para calcular o índice de contaminação</option>
+            {% for d in doencass %}
+                <option value="{{ d.id }}">{{ d.nome }}</option>
+            {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col s4 teal lighten-4 black-text">
+        <!-- EXIBIR AS DOENÇAS DO BANCO PARA O USUÁRIO MARCAR E ENVIAR
+          PARA A TABELA INTERMEDIÁRIA -->
+          <table>
+            <thead>
+              <tr>
+                  <th>Doença</th>
+                  <th>SIM</th>
+                  <th>NÃO</th>
+              </tr>
+            </thead>
+
+            {% for c in cruzamentos %}
+              <tbody>
+                <tr>
+                  <td id="{{ c.doenca_id.id }}">{{ c.doenca_id.nome }}</td>
+                  <td>
+                    <form action="#">
+                      <p>
+                        <label>
+                          {% if c.status %}
+                          <input name="marcador" type="radio" class="filled-in" value="sim" checked />
+                        
+                          {% else %}
+                          <input name="marcador" type="radio" class="filled-in" value="sim" />
+                        
+                          {% endif %}
+                            <span></span>
+                        </label>
+                      </p>
+                  </td>
+                  <td>
+                      <p>
+                        <label>
+                          {% if c.status %}
+                          <input name="marcador" type="radio" class="filled-in" value="nao" />
+                        
+                          {% else %}
+                          <input name="marcador" type="radio" class="filled-in" value="nao" checked/>
+                        
+                          {% endif %}
+                            <span></span>
+                        </label>
+                      </p>
+                    </form>
+                  </td>
+                </tr>
+              </tbody>
+            {% endfor %}
+          </table>
+      </div>
+
+      <!-- Tabela dos amigos do usuário -->
+      <div class="col s4 offset-l1 teal lighten-4 black-text" id="usu"></div>
+
+    </div>
+
+    <div class="row">
+      <button class="btn waves-effect waves-light black-text" type="submit" onclick="registrarDoencas()">ENVIAR DOENÇAS</button>
+    </div>
+
+    <div class="row">
+        <h4>Registre no mapa abaixo os últimos locais que você visitou:</h4>
+    </div>
+  </div>
+
+  <!-- Google maps-->
+    <div id="map_canvas" style="width:75%; height:75%"></div>
+
+</body>
+
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+    integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+    crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+    integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+    crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+    crossorigin="anonymous"></script>
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+    integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+    crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+    integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+    crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+    integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+    crossorigin="anonymous"></script>
+  </script>
+
+
+  <script>
+    var usuarios = {{usuarioss | safe}}; // Armazena os usuários registrados no admin
+    console.log(usuarios);
+
+    var tabelaCruzamento = JSON.parse('{{crNovo|safe}}');
+    console.log(tabelaCruzamento);
+
+    amigosFacebook = [];
+    amigos_de_amigos = [];
+
+    // Função que incializa a API do facebook
+    window.fbAsyncInit = function () {
+      FB.init({
+        appId: '697382141093329',
+        cookie: true,
+        xfbml: true,
+        version: 'v7.0'
+      });
+      FB.AppEvents.logPageView();
+      FB.getLoginStatus(function (response) {
+        statusChangeCallback(response);
+      });
+    };
+
+    (function (d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) { return; }
+      js = d.createElement(s); js.id = id;
+      js.src = "https://connect.facebook.net/en_US/sdk.js";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+
+    //Função que solicita os dados do usuário logado
+    function statusChangeCallback(response) {
+      if (response.status === 'connected') {
+        FB.api('me?fields=name,id', function (response) {
+          if (response) {
+            console.log(response);
+            percorrePagina(response);
+          }
+        });
+
+        //Função para solicitar o 1º e 2º grau de amizade do usuário logado
+        FB.api('me/friends?fields=name,id', function(response) { //Amigos do usuário
+          if (response.data) {
+            console.log(response);
+            mostrarAmigos(response.data);
+            amigosFacebook = response.data;
+            amigosDeAmigos = []
+            for (var i = 0; i < response.data.length; i++) {
+              amigosDeAmigos.push(response.data[i].id);
+              FB.api(`${amigosDeAmigos[i]}/friends?fields=name,id`, function (response) { //Amigos dos amigos do usuário
+                console.log(response);
+                amigos_de_amigos = response.data;
+              });
+            }
+          }
+        }, { scope: 'user_friends' });
+        console.log("Usuário Autorizado.");
+
+      } else {
+        console.log("Não Autorizado");
+      }
+    }
+
+    //Recebe a ação do botão e confere se usuário está logado
+    function checkLoginState() {
+      FB.getLoginStatus(function (response) {
+        statusChangeCallback(response);
+      });
+    }
+
+    //Função que recebe informações do usuário logado
+    function percorrePagina(paginas) {
+      pagina = document.getElementById('paginas');
+      pagina.innerHTML = ''
+      pagina.innerHTML += "Olá, " + paginas.name + "." + " Seu id é: " + paginas.id
+      var n = 0;
+        for (var i = 0; i < usuarios.length; i++) {
+            if (Number(paginas.id) == Number(usuarios[i].id_facebook)) {
+                alert('Seja bem-vindo!');
+                n = 1;
+                if ({{ request.session.id_facebook }}){
+                    console.log({{ request.session.id_facebook }})
+                } else {
+                  location.href="/update_session/" + paginas.id
+                }
+                break;
+            }
+        }
+      if (n == 0){
+        alert('Olá, notei que é seu primeiro login, seja bem-vindo!');
+              var idadeUsuario = prompt('Qual a sua idade?');
+              var cidadeUsuario = prompt('Em qual cidade você mora?');
+              var nomeUsuario = paginas.name;
+              var idUsuario = paginas.id;
+              console.log(nomeUsuario);
+              console.log(idUsuario);
+              body = {
+                  nomeUsuario, idUsuario, idadeUsuario, cidadeUsuario, csrfmiddlewaretoken: '{{ csrf_token }}'
+              }
+                console.log(body);
+                fetch('/registrarUsuario', {
+                  method: 'POST',
+                  body: JSON.stringify(body),
+                  headers: {
+                    'Accept': 'application/json, text/plain, */*',
+                    'Content-Type': 'application/json',
+                    "X-CSRFToken": '{{ csrf_token }}'
+                  },
+                })
+      }
+    }
+    //Armazena os amigos de 1º grau em um vetor, percorre e imprime na tela.
+    function mostrarAmigos(amigosFacebook) {
+      console.log(amigosFacebook)
+      divAmigo = document.getElementById('usu');
+      amigosCadastrados = []
+      console.log(usuarios);
+      for (var i = 0; i < usuarios.length; i++) {
+        for (var j = 0; j < amigosFacebook.length; j++) {
+          if (Number(amigosFacebook[j].id) == Number(usuarios[i].id_facebook)) {
+            amigosCadastrados.push(usuarios[i])
+            break;
+          }
+        }
+      }
+      amigosHtml = "<table style='min-width: 280px; min-height: 380px;'>"
+      amigosHtml += "<tr align='center'> <td><b>Amigos do Facebook registrados no sistema<b/></td></tr>"
+      console.log(amigosCadastrados)
+      for (var i = 0; i < amigosCadastrados.length; i++) {
+        amigosHtml += "<tr align='center'><td>"+amigosCadastrados[i].nome+"</td></tr>"
+      }
+      amigosHtml += '</table>'
+      divAmigo.innerHTML = amigosHtml
+    }
+
+    //Função para registrar na tabela de cruzamento
+    function registrarDoencas() {
+      listaStatus = []
+      var marcadores = document.getElementsByName('marcador');
+      console.log(marcadores);
+        for(i = 0; i < marcadores.length; i++){
+          if(marcadores[i].checked && marcadores[i].value == "sim"){
+              listaStatus.push(true);
+          }
+          if(marcadores[i].checked && marcadores[i].value == "nao"){
+              listaStatus.push(false);
+          }
+        }
+        body = {
+                  listaStatus, csrfmiddlewaretoken: '{{ csrf_token }}'
+              }
+                console.log(body);
+                fetch('/registrarCruzamento', {
+                  method: 'POST',
+                  body: JSON.stringify(body),
+                  headers: {
+                    'Accept': 'application/json, text/plain, */*',
+                    'Content-Type': 'application/json',
+                    "X-CSRFToken": '{{ csrf_token }}'
+                  },
+                })
+    }
+
+    // Pegando a doença do select box
+    function calcular() {
+      var select = document.getElementById('doencas');
+      var value = select.options[select.selectedIndex].value;
+      console.log(value);
+      var n1 = 0; //amigos que estão doente
+      var n2 = 0; //amigos que não estão doente
+      var n3 = 0; //amigos de amigos que estão doente
+      var n4 = 0; //amigos de amigos que não estão doente
+
+      //ALGORTIMO DE BUSCA EM LARGURA
+          for (var j = 0; j < amigosFacebook.length; j++) {
+            if (estaDoente(amigosFacebook[j].id, value)) { //verifica se tem algum amigo do usuario doente
+              n1 = n1 + 1;
+            } else {
+              n2 = n2 + 1;
+            }
+          }
+          for (var j = 0; j < amigos_de_amigos.length; j++) {
+            if (estaDoente(amigos_de_amigos[j].id, value)) { //verifica se tem algum amigo de amigo do usuario doente
+              n3 = n3 + 1;
+            } else {
+              n4 = n4 + 1;
+            }
+          }
+
+          alert("Você tem: " + n1 + " amigos doentes e " +n2+ " não registraram essa doença");
+          alert("Você tem: " + n3 + " amigos de amigos doentes e " + n4 + " amigos de amigos não registraram essa doença");
+      
+          //if(n1 > 0){
+          //} else {
+          //}
+
+          //if(n2){
+          //} else {
+          //}
+    }
+    function estaDoente(idUsu, idDoenca) {
+        for (var i = 0; i < usuarios.length; i++) {
+          for (var j = 0; j < tabelaCruzamento.length; j++){
+            if (Number(idUsu) == Number(usuarios[i].id_facebook)) {
+               if(tabelaCruzamento[j].usuario_id == usuarios[i].id && idDoenca == tabelaCruzamento[j].doenca_id){
+                  if(tabelaCruzamento[j].status == true){
+                      return true;
+                  } else {
+                      return false;
+                  }
+               }
+            }
+          }
+        }
+    }
+
+  </script>
+  <script type="text/javascript"
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCFk0gvT48z_YDEszC2b7t0nlmC5vn2Xyg">
+    </script>
+  <script type="text/javascript">
+    // Mapa Geocoding para o usuário informar os locais que ele visitou recentemente
+    function initialize() {
+      const myLatlng = { lat: -5.779159794905515, lng: -35.203129700035184 };
+
+      var mapOptions = {
+        center: new google.maps.LatLng(-5.779159794905515, -35.203129700035184),
+        zoom: 8,
+        mapTypeId: google.maps.MapTypeId.ROADMAP
+      };
+
+
+      let infoWindow = new google.maps.InfoWindow({
+        content: "Click the map to get Lat/Lng!",
+        position: myLatlng,
+      });
+      infoWindow.open(map);
+
+
+      var map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
+      // Configure the click listener.
+      map.addListener("click", (mapsMouseEvent) => {
+        // Close the current InfoWindow.
+        infoWindow.close();
+
+        // Create a new InfoWindow.
+        infoWindow = new google.maps.InfoWindow({
+          position: mapsMouseEvent.latLng,
+        });
+        var posicao = mapsMouseEvent.latLng.toJSON()
+
+        var minhaURL = "https://maps.googleapis.com/maps/api/geocode/json?latlng=" + posicao["lat"] + "," + posicao["lng"] + "&key=AIzaSyBuQRT9AhH-zq4sUrhLzxlcNrAWVrq2UEs"
+
+        const myRequest = new Request(minhaURL);
+
+        const myURL = myRequest.url;
+        const myMethod = myRequest.method;
+
+        //Recebe os dados geográficos do local informado pelo usuário e envia para preencher no banco de dados 
+        fetch(myRequest)
+          .then(response => {
+            if (response.status === 200) {
+              return response.json();
+            } else {
+              throw new Error('Ops! Houve um erro em nosso servidor.');
+            }
+          })
+          .then(response => {
+
+            var cidade;
+            var estado;
+            var pais;
+            var cep;
+            var latitude;
+            var longitude;
+            var r = confirm("Deseja mesmo enviar esse local?");
+
+            if (r == true) {
+              console.log(response);
+              var tam = response.results[0].address_components.length;
+              if (tam < 5) { //Confere se o vetor tem o tamanho mínimo necessário para possuir as informações que precisam ser enviadas.
+                alert("Ops, preciso de um local mais especifico!")
+              } else {
+                for (i = 0; i < tam; i++) {
+                  if (response.results[0].address_components[i].types[0] == "administrative_area_level_2") {
+                    cidade = response.results[0].address_components[i].long_name;
+                  }
+
+                  if (response.results[0].address_components[i].types[0] == "administrative_area_level_1") {
+                    estado = response.results[0].address_components[i].long_name;
+                  }
+
+                  if (response.results[0].address_components[i].types[0] == "country") {
+                    pais = response.results[0].address_components[i].long_name;
+                  }
+                  if (response.results[0].address_components[i].types[0] == "postal_code") {
+                    cep = response.results[0].address_components[i].long_name;
+                  }
+                }
+                latitude = response.results[0].geometry.location.lat;
+                longitude = response.results[0].geometry.location.lng;
+
+                //Enviando as variáveis que contêm os dados geográficos para o Views do Django.
+                body = {
+                  cidade, estado, pais, cep, latitude, longitude, csrfmiddlewaretoken: '{{ csrf_token }}'
+                }
+                console.log(body);
+                fetch('/guardarLocais', {
+                  method: 'POST',
+                  body: JSON.stringify(body),
+                  headers: {
+                    'Accept': 'application/json, text/plain, */*',
+                    'Content-Type': 'application/json',
+                    "X-CSRFToken": '{{ csrf_token }}'
+                  },
+                })
+              }
+            }
+            else {
+              //
+            }
+            //alert(response.results.address_components.long_name)
+
+            // ...
+          }).catch(error => {
+            console.error(error);
+          });
+
+        infoWindow.setContent(
+          JSON.stringify(mapsMouseEvent.latLng.toJSON(), null, 2)
+        );
+        infoWindow.open(map);
+      });
+
+    }
+  </script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <!--JavaScript at end of body for optimized loading-->
+  <script type="text/javascript" src="{% static 'js/materialize.min.js' %}"></script>
+  <script>
+    // Or with jQuery
+    $(document).ready(function () {
+      $('select').formSelect();
+    });
+    $(document).ready(function () {
+      $('.sidenav').sidenav();
+    });
+  </script>
+
+</html>
